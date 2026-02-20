@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Management</title>
+  <style>
+    body { font-family: Arial; padding: 30px; background:#f4f4f4; }
+    h2 { text-align:center; }
+    input { padding:8px; margin:5px; }
+    button { padding:8px 15px; cursor:pointer; }
+    table { width:100%; margin-top:20px; border-collapse:collapse; background:white; }
+    th, td { padding:10px; border:1px solid #ddd; text-align:center; }
+    th { background:#333; color:white; }
+    .edit { background:orange; color:white; border:none; }
+    .delete { background:red; color:white; border:none; }
+  </style>
+</head>
+<body>
+
+<h2>Student Management System</h2>
+
+<input type="hidden" id="studentId">
+<input type="text" id="name" placeholder="Name">
+<input type="text" id="department" placeholder="Department">
+<input type="email" id="email" placeholder="Email">
+<button onclick="saveStudent()">Save</button>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Department</th>
+      <th>Email</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="studentTable"></tbody>
+</table>
+
+<script>
+const API_URL = "/students";
+
+async function fetchStudents() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
+
+  const table = document.getElementById("studentTable");
+  table.innerHTML = "";
+
+  data.forEach(student => {
+    table.innerHTML += `
+      <tr>
+        <td>${student.id}</td>
+        <td>${student.name}</td>
+        <td>${student.department}</td>
+        <td>${student.email}</td>
+        <td>
+          <button class="edit" onclick="editStudent(${student.id}, '${student.name}', '${student.department}', '${student.email}')">Edit</button>
+          <button class="delete" onclick="deleteStudent(${student.id})">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+async function saveStudent() {
+  const id = document.getElementById("studentId").value;
+  const name = document.getElementById("name").value;
+  const department = document.getElementById("department").value;
+  const email = document.getElementById("email").value;
+
+  if (id) {
+    await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, department, email })
+    });
+  } else {
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, department, email })
+    });
+  }
+
+  clearForm();
+  fetchStudents();
+}
+
+function editStudent(id, name, department, email) {
+  document.getElementById("studentId").value = id;
+  document.getElementById("name").value = name;
+  document.getElementById("department").value = department;
+  document.getElementById("email").value = email;
+}
+
+async function deleteStudent(id) {
+  await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+  fetchStudents();
+}
+
+function clearForm() {
+  document.getElementById("studentId").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("department").value = "";
+  document.getElementById("email").value = "";
+}
+
+fetchStudents();
+</script>
+
+</body>
+</html>
